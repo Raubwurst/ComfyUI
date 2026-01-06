@@ -134,7 +134,7 @@ class ZImage_Control(torch.nn.Module):
         x_attn_mask = None
         if not self.refiner_control:
             for layer in self.control_noise_refiner:
-                control_context = layer(control_context, x_attn_mask, x_freqs_cis[:control_context.shape[0], :control_context.shape[1]], adaln_input)
+                control_context = layer(control_context, x_attn_mask, x_freqs_cis[:control_context.shape[0], :, :control_context.shape[1]], adaln_input)
 
         return control_context
 
@@ -142,19 +142,19 @@ class ZImage_Control(torch.nn.Module):
         if self.refiner_control:
             if self.broken:
                 if layer_id == 0:
-                    return self.control_layers[layer_id](control_context, x, x_mask=x_attn_mask, freqs_cis=x_freqs_cis[:control_context.shape[0], :control_context.shape[1]], adaln_input=adaln_input)
+                    return self.control_layers[layer_id](control_context, x, x_mask=x_attn_mask, freqs_cis=x_freqs_cis[:control_context.shape[0], :, :control_context.shape[1]], adaln_input=adaln_input)
                 if layer_id > 0:
                     out = None
                     for i in range(1, len(self.control_layers)):
-                        o, control_context = self.control_layers[i](control_context, x, x_mask=x_attn_mask, freqs_cis=x_freqs_cis[:control_context.shape[0], :control_context.shape[1]], adaln_input=adaln_input)
+                        o, control_context = self.control_layers[i](control_context, x, x_mask=x_attn_mask, freqs_cis=x_freqs_cis[:control_context.shape[0], :, :control_context.shape[1]], adaln_input=adaln_input)
                         if out is None:
                             out = o
 
                     return (out, control_context)
             else:
-                return self.control_noise_refiner[layer_id](control_context, x, x_mask=x_attn_mask, freqs_cis=x_freqs_cis[:control_context.shape[0], :control_context.shape[1]], adaln_input=adaln_input)
+                return self.control_noise_refiner[layer_id](control_context, x, x_mask=x_attn_mask, freqs_cis=x_freqs_cis[:control_context.shape[0], :, :control_context.shape[1]], adaln_input=adaln_input)
         else:
             return (None, control_context)
 
     def forward_control_block(self, layer_id, control_context, x, x_attn_mask, x_freqs_cis, adaln_input):
-        return self.control_layers[layer_id](control_context, x, x_mask=x_attn_mask, freqs_cis=x_freqs_cis[:control_context.shape[0], :control_context.shape[1]], adaln_input=adaln_input)
+        return self.control_layers[layer_id](control_context, x, x_mask=x_attn_mask, freqs_cis=x_freqs_cis[:control_context.shape[0], :, :control_context.shape[1]], adaln_input=adaln_input)
