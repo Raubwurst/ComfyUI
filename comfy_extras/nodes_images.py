@@ -518,8 +518,9 @@ class GetImageSize(IO.ComfyNode):
         batch_size = image.shape[0]
 
         # Send progress text to display size on the node
-        if cls.hidden.unique_id:
-            PromptServer.instance.send_progress_text(f"width: {width}, height: {height}\n batch size: {batch_size}", cls.hidden.unique_id)
+        unique_id = getattr(getattr(cls, "hidden", None), "unique_id", None)
+        if unique_id:
+            PromptServer.instance.send_progress_text(f"width: {width}, height: {height}\n batch size: {batch_size}", unique_id)
 
         return IO.NodeOutput(width, height, batch_size)
 
